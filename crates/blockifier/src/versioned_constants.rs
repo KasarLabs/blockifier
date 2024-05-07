@@ -338,9 +338,9 @@ impl Decode for L2ResourceGasCosts {
         let data = <[u128; 3]>::decode(input)?;
 
         Ok(L2ResourceGasCosts {
-            milligas_per_data_felt: data.0,
-            event_key_factor: data.1,
-            milligas_per_code_byte: data.2,
+            milligas_per_data_felt: data[0],
+            event_key_factor: data[1],
+            milligas_per_code_byte: data[2],
         })
     }
 }
