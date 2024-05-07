@@ -513,8 +513,9 @@ fn test_invoke_tx(
         calldata_length,
         vec![&expected_validate_call_info, &expected_execute_call_info],
     );
-    let actual_resources = get_actual_resources(expected_cairo_resources, gas_uage_vector);
-    let mut expected_execution_info = TransactionExecutionInfo {
+    let actual_resources =
+        get_actual_resources(expected_cairo_resources, da_gas + calldata_and_signature_gas);
+    let expected_execution_info = TransactionExecutionInfo {
         validate_call_info: expected_validate_call_info,
         execute_call_info: expected_execute_call_info,
         fee_transfer_call_info: expected_fee_transfer_call_info,
@@ -524,13 +525,6 @@ fn test_invoke_tx(
         revert_error: None,
         bouncer_resources: actual_resources,
     };
-
-    add_kzg_da_resources(
-        &mut expected_execution_info,
-        starknet_resources.state_changes_count,
-        versioned_constants,
-        use_kzg_da,
-    );
 
     // Test execution info result.
     assert_eq!(actual_execution_info, expected_execution_info);
@@ -1203,8 +1197,8 @@ fn test_declare_tx(
         vec![&expected_validate_call_info],
     );
 
-    let actual_resources = get_actual_resources(expected_cairo_resources, gas_usage_vector);
-    let mut expected_execution_info = TransactionExecutionInfo {
+    let actual_resources = get_actual_resources(expected_cairo_resources, code_gas + da_gas);
+    let expected_execution_info = TransactionExecutionInfo {
         validate_call_info: expected_validate_call_info,
         execute_call_info: None,
         fee_transfer_call_info: expected_fee_transfer_call_info,
@@ -1214,13 +1208,6 @@ fn test_declare_tx(
         actual_resources: actual_resources.clone(),
         bouncer_resources: actual_resources,
     };
-
-    add_kzg_da_resources(
-        &mut expected_execution_info,
-        starknet_resources.state_changes_count,
-        versioned_constants,
-        use_kzg_da,
-    );
 
     // Test execution info result.
     assert_eq!(actual_execution_info, expected_execution_info);
@@ -1343,7 +1330,7 @@ fn test_deploy_account_tx(
     );
 
     let actual_resources = get_actual_resources(expected_cairo_resources, da_gas);
-    let mut expected_execution_info = TransactionExecutionInfo {
+    let expected_execution_info = TransactionExecutionInfo {
         validate_call_info: expected_validate_call_info,
         execute_call_info: expected_execute_call_info,
         fee_transfer_call_info: expected_fee_transfer_call_info,

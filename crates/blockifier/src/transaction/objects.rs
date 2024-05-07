@@ -251,7 +251,8 @@ impl TransactionExecutionInfo {
 
 /// A mapping from a transaction execution resource to its actual usage.
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
-pub struct ResourcesMapping(pub IndexMap<String, u128>);
+pub struct ResourcesMapping(pub HashMap<String, usize>);
+
 impl ResourcesMapping {
     #[cfg(test)]
     pub fn n_steps(&self) -> u128 {

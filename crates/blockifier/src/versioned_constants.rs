@@ -289,9 +289,12 @@ impl TryFrom<&Path> for VersionedConstants {
 pub struct L2ResourceGasCosts {
     // TODO(barak, 18/03/2024): Once we start charging per byte change to milligas_per_data_byte,
     // divide the value by 32 in the JSON file.
-    pub gas_per_data_felt: ResourceCost,
-    pub event_key_factor: ResourceCost,
-    pub gas_per_code_byte: ResourceCost,
+    pub milligas_per_data_felt: u128,
+    pub event_key_factor: u128,
+    // TODO(avi, 15/04/2024): This constant was changed to 32 milligas in the JSON file, but the
+    // actual number we wanted is 1/32 gas per byte. Change the value to 1/32 in the next version
+    // where rational numbers are supported.
+    pub milligas_per_code_byte: u128,
 }
 
 #[cfg(feature = "scale-info")]
@@ -304,13 +307,13 @@ impl scale_info::TypeInfo for L2ResourceGasCosts {
             .composite(
                 scale_info::build::Fields::named()
                     .field(|f| {
-                        f.ty::<(u128, u128)>().name("gas_per_data_felt").type_name("(u128, u128)")
+                        f.ty::<u128>().name("milligas_per_data_felt").type_name("u128")
                     })
                     .field(|f| {
-                        f.ty::<(u128, u128)>().name("event_key_factor").type_name("(u128, u128)")
+                        f.ty::<u128>().name("event_key_factor").type_name("u128")
                     })
                     .field(|f| {
-                        f.ty::<(u128, u128)>().name("gas_per_code_byte").type_name("(u128, u128)")
+                        f.ty::<u128>().name("milligas_per_code_byte").type_name("u128")
                     }),
             )
     }
@@ -322,12 +325,9 @@ impl Encode for L2ResourceGasCosts {
     }
 
     fn encode_to<T: parity_scale_codec::Output + ?Sized>(&self, dest: &mut T) {
-        self.gas_per_data_felt.numer().encode_to(dest);
-        self.gas_per_data_felt.denom().encode_to(dest);
-        self.event_key_factor.numer().encode_to(dest);
-        self.event_key_factor.denom().encode_to(dest);
-        self.gas_per_code_byte.numer().encode_to(dest);
-        self.gas_per_code_byte.denom().encode_to(dest);
+        self.milligas_per_data_felt.encode_to(dest);
+        self.event_key_factor.encode_to(dest);
+        self.milligas_per_code_byte.encode_to(dest);
     }
 }
 
@@ -335,12 +335,12 @@ impl Decode for L2ResourceGasCosts {
     fn decode<I: parity_scale_codec::Input>(
         input: &mut I,
     ) -> Result<Self, parity_scale_codec::Error> {
-        let decodec = <[u128; 6]>::decode(input)?;
+        let data = <[u128; 3]>::decode(input)?;
 
         Ok(L2ResourceGasCosts {
-            gas_per_data_felt: ResourceCost::new_raw(decodec[0], decodec[1]),
-            event_key_factor: ResourceCost::new_raw(decodec[2], decodec[3]),
-            gas_per_code_byte: ResourceCost::new_raw(decodec[4], decodec[5]),
+            milligas_per_data_felt: data.0,
+            event_key_factor: data.1,
+            milligas_per_code_byte: data.2,
         })
     }
 }

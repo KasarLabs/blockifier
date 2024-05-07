@@ -10,16 +10,52 @@ use crate::transaction::account_transaction::AccountTransaction;
 use crate::transaction::objects::{
     GasVector, HasRelatedFeeType, ResourcesMapping, TransactionPreValidationResult,
 };
-use crate::utils::u128_from_usize;
+use crate::utils::{u128_div_ceil, u128_from_usize, usize_from_u128};
+use crate::versioned_constants::VersionedConstants;
 
 #[cfg(test)]
 #[path = "gas_usage_test.rs"]
 pub mod test;
 
-// Returns an estimation of the gas usage of the Starknet contract when processing L1<>L2 messages
-// on L1.
-pub fn get_messages_gas_usage(
-    message_cost_info: &MessageL1CostInfo,
+pub fn get_tx_events_gas_cost<'a>(
+    call_infos: impl Iterator<Item = &'a CallInfo>,
+    versioned_constants: &VersionedConstants,
+) -> GasVector {
+    let mut l1_milligas: u128 = 0;
+    for main_call_info in call_infos {
+        for inner_call in main_call_info.into_iter() {
+            l1_milligas +=
+                get_events_milligas_cost(&inner_call.execution.events, versioned_constants);
+        }
+    }
+    GasVector { l1_gas: l1_milligas / 1000_u128, l1_data_gas: 0_u128 }
+}
+
+pub fn get_events_milligas_cost(
+    events: &[OrderedEvent],
+    versioned_constants: &VersionedConstants,
+) -> u128 {
+    let l2_resource_gas_costs = &versioned_constants.l2_resource_gas_costs;
+    let (event_key_factor, data_word_cost) =
+        (l2_resource_gas_costs.event_key_factor, l2_resource_gas_costs.milligas_per_data_felt);
+    let safe_u128_from_usize =
+        |x| u128_from_usize(x).expect("Could not convert starknet gas usage from usize to u128.");
+    events
+        .iter()
+        .map(|OrderedEvent { event, .. }| {
+            // TODO(barak: 18/03/2024): Once we start charging per byte change to num_bytes_keys and
+            // num_bytes_data.
+            let keys_size = safe_u128_from_usize(event.keys.len());
+            let data_size = safe_u128_from_usize(event.data.0.len());
+            event_key_factor * data_word_cost * keys_size + data_word_cost * data_size
+        })
+        .sum()
+}
+
+/// Returns an estimation of the gas usage for processing L1<>L2 messages on L1. Accounts for both
+/// Starknet and SHARP contracts.
+pub fn get_messages_gas_cost<'a>(
+    call_infos: impl Iterator<Item = &'a CallInfo>,
     l1_handler_payload_size: Option<usize>,
 ) -> GasVector {
     let n_l2_to_l1_messages = message_cost_info.l2_to_l1_payload_lengths.len();
@@ -231,5 +267,5 @@ pub fn compute_discounted_gas_from_gas_vector(
     let fee_type = tx_context.tx_info.fee_type();
     let gas_price = gas_prices.get_gas_price_by_fee_type(&fee_type);
     let data_gas_price = gas_prices.get_data_gas_price_by_fee_type(&fee_type);
-    gas_usage + (blob_gas_usage * u128::from(data_gas_price)) / gas_price
+    gas_usage + u128_div_ceil(blob_gas_usage * u128::from(data_gas_price), gas_price)
 }

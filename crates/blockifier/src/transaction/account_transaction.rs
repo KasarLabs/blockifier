@@ -25,8 +25,8 @@ use crate::transaction::errors::{
     TransactionExecutionError, TransactionFeeError, TransactionPreValidationError,
 };
 use crate::transaction::objects::{
-    HasRelatedFeeType, ResourcesMapping, TransactionExecutionInfo, TransactionExecutionResult,
-    TransactionInfo, TransactionInfoCreator, TransactionPreValidationResult,
+    HasRelatedFeeType, TransactionExecutionInfo, TransactionExecutionResult, TransactionInfo,
+    TransactionInfoCreator, TransactionPreValidationResult,
 };
 use crate::transaction::transaction_types::TransactionType;
 use crate::transaction::transaction_utils::update_remaining_gas;
@@ -272,6 +272,36 @@ impl AccountTransaction {
         }
     }
 
+    fn assert_actual_fee_in_bounds(
+        tx_context: &Arc<TransactionContext>,
+        actual_fee: Fee,
+    ) -> TransactionExecutionResult<()> {
+        match &tx_context.tx_info {
+            TransactionInfo::Current(context) => {
+                let ResourceBounds {
+                    max_amount: max_l1_gas_amount,
+                    max_price_per_unit: max_l1_gas_price,
+                } = context.l1_resource_bounds()?;
+                if actual_fee > Fee(u128::from(max_l1_gas_amount) * max_l1_gas_price) {
+                    panic!(
+                        "Actual fee {:#?} exceeded bounds; max amount is {:#?}, max price is 
+                         {:#?}.",
+                        actual_fee, max_l1_gas_amount, max_l1_gas_price
+                    );
+                }
+            }
+            TransactionInfo::Deprecated(DeprecatedTransactionInfo { max_fee, .. }) => {
+                if actual_fee > *max_fee {
+                    panic!(
+                        "Actual fee {:#?} exceeded bounds; max fee is {:#?}.",
+                        actual_fee, max_fee
+                    );
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn handle_fee(
         state: &mut dyn State,
         tx_context: Arc<TransactionContext>,
@@ -282,6 +312,9 @@ impl AccountTransaction {
             // Fee charging is not enforced in some transaction simulations and tests.
             return Ok(None);
         }
+
+        // TODO(Amos, 8/04/2024): Add test for this assert.
+        Self::assert_actual_fee_in_bounds(&tx_context, actual_fee)?;
 
         // Charge fee.
         let fee_transfer_call_info = Self::execute_fee_transfer(state, tx_context, actual_fee)?;
@@ -633,12 +666,11 @@ impl TransactionInfoCreator for AccountTransaction {
 
 #[derive(Debug, Encode, Decode)]
 /// Represents a bundle of validate-execute stage execution effects.
-pub struct ValidateExecuteCallInfo {
-    pub validate_call_info: Option<CallInfo>,
-    pub execute_call_info: Option<CallInfo>,
-    pub revert_error: Option<String>,
-    pub final_cost: ActualCost,
-    pub bouncer_resources: ResourcesMapping,
+struct ValidateExecuteCallInfo {
+    validate_call_info: Option<CallInfo>,
+    execute_call_info: Option<CallInfo>,
+    revert_error: Option<String>,
+    final_cost: ActualCost,
 }
 
 impl ValidateExecuteCallInfo {

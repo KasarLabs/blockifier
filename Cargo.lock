@@ -386,7 +386,7 @@ dependencies = [
 
 [[package]]
 name = "blockifier"
-version = "0.5.0-rc.3"
+version = "0.6.0-rc.2"
 dependencies = [
  "anyhow",
  "ark-ec",
@@ -889,7 +889,7 @@ dependencies = [
  "cairo-lang-syntax",
  "cairo-lang-utils 2.6.0-rc.0 (git+https://github.com/kasarlabs/cairo.git?branch=feature/scale-codec)",
  "itertools 0.11.0",
- "num-bigint",
+ "num-traits 0.2.17",
  "once_cell",
  "salsa",
  "smol_str",
@@ -2247,7 +2247,7 @@ dependencies = [
 
 [[package]]
 name = "native_blockifier"
-version = "0.5.0-rc.3"
+version = "0.6.0-rc.2"
 dependencies = [
  "blockifier",
  "cached",
@@ -3383,8 +3383,8 @@ dependencies = [
 
 [[package]]
 name = "starknet_api"
-version = "0.8.0"
-source = "git+https://github.com/bidzyyys/starknet-api.git?branch=feature/scale-codec#902daafe539f040f12f80505f2a8c11011c68b83"
+version = "0.10.0"
+source = "git+https://github.com/jbcaron/starknet-api.git?branch=feature/scale-codec#f4b242fa8cc83604f01624f9139758db38df9186"
 dependencies = [
  "cairo-lang-starknet-classes 2.6.0-rc.0 (git+https://github.com/bidzyyys/cairo.git?branch=feature/scale-codec)",
  "derive_more",
