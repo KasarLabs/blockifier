@@ -15,6 +15,7 @@ use cairo_vm::vm::errors::memory_errors::MemoryError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::runners::cairo_runner::{ExecutionResources, ResourceTracker, RunResources};
 use cairo_vm::vm::vm_core::VirtualMachine;
+use indexmap::IndexMap;
 use num_traits::Zero;
 use starknet_api::core::{ClassHash, ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
@@ -189,7 +190,7 @@ pub struct SyscallHintProcessor<'a> {
     pub secp256r1_hint_processor: SecpHintProcessor<ark_secp256r1::Config>,
 
     // Additional fields.
-    hints: &'a HashMap<String, Hint>,
+    hints: &'a IndexMap<String, Hint>,
     // Transaction info. and signature segments; allocated on-demand.
     execution_info_ptr: Option<Relocatable>,
 }
@@ -201,7 +202,7 @@ impl<'a> SyscallHintProcessor<'a> {
         context: &'a mut EntryPointExecutionContext,
         initial_syscall_ptr: Relocatable,
         call: CallEntryPoint,
-        hints: &'a HashMap<String, Hint>,
+        hints: &'a IndexMap<String, Hint>,
         read_only_segments: ReadOnlySegments,
     ) -> Self {
         SyscallHintProcessor {
