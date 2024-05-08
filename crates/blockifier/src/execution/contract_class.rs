@@ -15,6 +15,7 @@ use cairo_vm::types::program::Program;
 use cairo_vm::types::relocatable::MaybeRelocatable;
 use cairo_vm::vm::runners::builtin_runner::{HASH_BUILTIN_NAME, POSEIDON_BUILTIN_NAME};
 use cairo_vm::vm::runners::cairo_runner::ExecutionResources;
+use indexmap::IndexMap;
 use serde::de::Error as DeserializationError;
 use serde::{Deserialize, Deserializer};
 use starknet_api::core::EntryPointSelector;
@@ -120,7 +121,7 @@ impl ContractClassV0 {
 pub struct ContractClassV0Inner {
     #[serde(deserialize_with = "deserialize_program")]
     pub program: Program,
-    pub entry_points_by_type: HashMap<EntryPointType, Vec<EntryPoint>>,
+    pub entry_points_by_type: IndexMap<EntryPointType, Vec<EntryPoint>>,
 }
 
 impl TryFrom<DeprecatedContractClass> for ContractClassV0 {
@@ -222,7 +223,7 @@ pub fn estimate_casm_hash_computation_resources(
                 n_steps: 474,
                 n_memory_holes: 0,
                 builtin_instance_counter: HashMap::from([(POSEIDON_BUILTIN_NAME.to_string(), 10)]),
-            } + &poseidon_hash_many_cost(*length)
+            } + &poseidon_hash_many_cost(*length as usize)
         }
         NestedIntList::Node(segments) => {
             // The contract code is segmented by its functions.
@@ -242,7 +243,7 @@ pub fn estimate_casm_hash_computation_resources(
                         "Estimating hash cost is only supported for segmentation depth at most 1."
                     );
                 };
-                execution_resources += &poseidon_hash_many_cost(*length);
+                execution_resources += &poseidon_hash_many_cost(*length as usize);
                 execution_resources += &base_segment_cost;
             }
             execution_resources
@@ -282,7 +283,7 @@ pub struct EntryPointV1 {
 
 impl EntryPointV1 {
     pub fn pc(&self) -> usize {
-        self.offset.0
+        self.offset.0 as usize
     }
 }
 
@@ -346,7 +347,7 @@ impl TryFrom<CasmContractClass> for ContractClassV1 {
 
         let bytecode_segment_lengths = class
             .bytecode_segment_lengths
-            .unwrap_or_else(|| NestedIntList::Leaf(program.data_len()));
+            .unwrap_or_else(|| NestedIntList::Leaf(program.data_len() as u64));
 
         Ok(Self(Arc::new(ContractClassV1Inner {
             program,
@@ -390,7 +391,7 @@ fn convert_entry_points_v1(
         .map(|ep| -> Result<_, ProgramError> {
             Ok(EntryPointV1 {
                 selector: EntryPointSelector(felt_to_stark_felt(&Felt252::from(ep.selector))),
-                offset: EntryPointOffset(ep.offset),
+                offset: EntryPointOffset(ep.offset as u64),
                 builtins: ep.builtins.into_iter().map(|builtin| builtin + "_builtin").collect(),
             })
         })

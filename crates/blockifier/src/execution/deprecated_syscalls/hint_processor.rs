@@ -511,5 +511,5 @@ where
     let array_data_start_ptr = vm.get_relocatable(*ptr)?;
     *ptr = (*ptr + 1)?;
 
-    Ok(felt_range_from_ptr(vm, array_data_start_ptr, usize::try_from(array_size)?)?)
+    Ok(felt_range_from_ptr(vm, array_data_start_ptr, u64::try_from(array_size)? as usize)?)
 }
