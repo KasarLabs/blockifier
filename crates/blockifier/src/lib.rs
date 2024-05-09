@@ -3,6 +3,7 @@ pub mod block;
 pub mod context;
 pub mod execution;
 pub mod fee;
+pub mod scale_codecs;
 pub mod state;
 #[cfg(any(feature = "testing", test))]
 pub mod test_utils;

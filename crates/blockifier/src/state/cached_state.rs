@@ -261,7 +261,7 @@ impl<S: StateReader> State for CachedState<S> {
         // TODO(Ori, 1/2/2024): Write an indicative expect message explaining why the conversion
         // works.
         let current_nonce_as_u64: u64 =
-            usize::try_from(current_nonce.0)?.try_into().expect("Failed to convert usize to u64.");
+            u64::try_from(current_nonce.0)?;
         let next_nonce_val = 1_u64 + current_nonce_as_u64;
         let next_nonce = Nonce(StarkFelt::from(next_nonce_val));
         self.cache.set_nonce_value(contract_address, next_nonce);
