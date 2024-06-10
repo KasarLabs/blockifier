@@ -103,7 +103,7 @@ pub trait ValidatableTransaction {
     ) -> TransactionExecutionResult<Option<CallInfo>>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct DeclareTransaction {
     pub tx: starknet_api::transaction::DeclareTransaction,
     pub tx_hash: TransactionHash,
@@ -243,7 +243,7 @@ impl TransactionInfoCreator for DeclareTransaction {
         }
     }
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct DeployAccountTransaction {
     pub tx: starknet_api::transaction::DeployAccountTransaction,
     pub tx_hash: TransactionHash,
@@ -345,7 +345,7 @@ impl TransactionInfoCreator for DeployAccountTransaction {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct InvokeTransaction {
     pub tx: starknet_api::transaction::InvokeTransaction,
     pub tx_hash: TransactionHash,
@@ -451,7 +451,7 @@ impl TransactionInfoCreator for InvokeTransaction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct L1HandlerTransaction {
     pub tx: starknet_api::transaction::L1HandlerTransaction,
     pub tx_hash: TransactionHash,

@@ -35,7 +35,7 @@ use crate::execution::execution_utils::{felt_to_stark_felt, sn_api_to_cairo_vm_p
 
 pub type ContractClassResult<T> = Result<T, ContractClassError>;
 
-#[derive(Clone, Debug, Eq, PartialEq, derive_more::From)]
+#[derive(Clone, Debug, Eq, PartialEq, derive_more::From, serde::Serialize, serde::Deserialize)]
 pub enum ContractClass {
     V0(ContractClassV0),
     V1(ContractClassV1),
@@ -65,7 +65,7 @@ impl ContractClass {
 }
 
 // V0.
-#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, serde::Serialize)]
 pub struct ContractClassV0(pub Arc<ContractClassV0Inner>);
 impl Deref for ContractClassV0 {
     type Target = ContractClassV0Inner;
@@ -116,9 +116,9 @@ impl ContractClassV0 {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, serde::Serialize)]
 pub struct ContractClassV0Inner {
-    #[serde(deserialize_with = "deserialize_program")]
+    #[serde(with = "serde_program")]
     pub program: Program,
     pub entry_points_by_type: HashMap<EntryPointType, Vec<EntryPoint>>,
 }
@@ -135,7 +135,7 @@ impl TryFrom<DeprecatedContractClass> for ContractClassV0 {
 }
 
 // V1.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ContractClassV1(pub Arc<ContractClassV1Inner>);
 impl Deref for ContractClassV1 {
     type Target = ContractClassV1Inner;
@@ -265,15 +265,16 @@ fn poseidon_hash_many_cost(data_length: usize) -> ExecutionResources {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ContractClassV1Inner {
+    #[serde(with = "serde_program")]
     pub program: Program,
     pub entry_points_by_type: HashMap<EntryPointType, Vec<EntryPointV1>>,
     pub hints: HashMap<String, Hint>,
     bytecode_segment_lengths: NestedIntList,
 }
 
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Default, Eq, Hash, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct EntryPointV1 {
     pub selector: EntryPointSelector,
     pub offset: EntryPointOffset,
@@ -397,7 +398,7 @@ fn convert_entry_points_v1(
         .collect()
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 // TODO(Ayelet,10/02/2024): Change to bytes.
 pub struct ClassInfo {
     contract_class: ContractClass,
@@ -440,5 +441,34 @@ impl ClassInfo {
                 sierra_program_length,
             })
         }
+    }
+}
+
+mod serde_program {
+    use cairo_vm::serde::deserialize_program::ProgramJson;
+    use serde::Serialize;
+
+    use super::*;
+
+    /// Serializes the Program using the ProgramJson
+    pub fn serialize<S: serde::Serializer>(
+        program: &Program,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        let program = ProgramJson::from(program.clone());
+        program.serialize(serializer)
+    }
+
+    /// Deserializes the Program using the ProgramJson
+    pub fn deserialize<'de, D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> Result<Program, D::Error> {
+        let program_json = ProgramJson::deserialize(deserializer)?;
+        let program = cairo_vm::serde::deserialize_program::parse_program_json(program_json, None)
+            .map_err(|e| {
+                serde::de::Error::custom(format!("couldn't convert programjson to program {e:}"))
+            })?;
+
+        Ok(program)
     }
 }

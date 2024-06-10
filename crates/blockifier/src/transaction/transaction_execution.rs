@@ -21,7 +21,7 @@ use crate::transaction::transactions::{
 };
 
 // TODO: Move into transaction.rs, makes more sense to be defined there.
-#[derive(Debug, derive_more::From)]
+#[derive(Debug, derive_more::From, serde::Serialize, serde::Deserialize)]
 pub enum Transaction {
     AccountTransaction(AccountTransaction),
     L1HandlerTransaction(L1HandlerTransaction),
