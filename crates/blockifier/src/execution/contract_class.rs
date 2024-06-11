@@ -443,32 +443,3 @@ impl ClassInfo {
         }
     }
 }
-
-mod serde_program {
-    use cairo_vm::serde::deserialize_program::ProgramJson;
-    use serde::Serialize;
-
-    use super::*;
-
-    /// Serializes the Program using the ProgramJson
-    pub fn serialize<S: serde::Serializer>(
-        program: &Program,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error> {
-        let program = ProgramJson::from(program.clone());
-        program.serialize(serializer)
-    }
-
-    /// Deserializes the Program using the ProgramJson
-    pub fn deserialize<'de, D: serde::Deserializer<'de>>(
-        deserializer: D,
-    ) -> Result<Program, D::Error> {
-        let program_json = ProgramJson::deserialize(deserializer)?;
-        let program = cairo_vm::serde::deserialize_program::parse_program_json(program_json, None)
-            .map_err(|e| {
-                serde::de::Error::custom(format!("couldn't convert programjson to program {e:}"))
-            })?;
-
-        Ok(program)
-    }
-}
