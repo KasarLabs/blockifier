@@ -118,7 +118,7 @@ impl ContractClassV0 {
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, serde::Serialize)]
 pub struct ContractClassV0Inner {
-    #[serde(with = "serde_program")]
+    //#[serde(with = "serde_program")]
     pub program: Program,
     pub entry_points_by_type: HashMap<EntryPointType, Vec<EntryPoint>>,
 }
@@ -267,7 +267,7 @@ fn poseidon_hash_many_cost(data_length: usize) -> ExecutionResources {
 
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ContractClassV1Inner {
-    #[serde(with = "serde_program")]
+    // #[serde(with = "serde_program")]
     pub program: Program,
     pub entry_points_by_type: HashMap<EntryPointType, Vec<EntryPointV1>>,
     pub hints: HashMap<String, Hint>,
