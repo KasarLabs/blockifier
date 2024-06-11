@@ -490,7 +490,7 @@ dependencies = [
 [[package]]
 name = "cairo-felt"
 version = "0.9.1"
-source = "git+https://github.com/kasarlabs/cairo-vm.git?branch=feature/scale-codec#108657464862702e9f661b51a291ff88c7c2ece3"
+source = "git+https://github.com/kasarlabs/cairo-vm.git?branch=feature/scale-codec#8036f71488bd29801b47daeb4ebcc610d2f4f947"
 dependencies = [
  "lazy_static",
  "num-bigint",
@@ -1083,7 +1083,7 @@ dependencies = [
 [[package]]
 name = "cairo-vm"
 version = "0.9.1"
-source = "git+https://github.com/kasarlabs/cairo-vm.git?branch=feature/scale-codec#108657464862702e9f661b51a291ff88c7c2ece3"
+source = "git+https://github.com/kasarlabs/cairo-vm.git?branch=feature/scale-codec#8036f71488bd29801b47daeb4ebcc610d2f4f947"
 dependencies = [
  "anyhow",
  "bincode",
