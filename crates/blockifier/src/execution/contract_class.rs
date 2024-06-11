@@ -222,7 +222,7 @@ pub fn estimate_casm_hash_computation_resources(
                 n_steps: 474,
                 n_memory_holes: 0,
                 builtin_instance_counter: HashMap::from([(POSEIDON_BUILTIN_NAME.to_string(), 10)]),
-            } + &poseidon_hash_many_cost(*length)
+            } + &poseidon_hash_many_cost(*length as usize)
         }
         NestedIntList::Node(segments) => {
             // The contract code is segmented by its functions.
@@ -242,7 +242,7 @@ pub fn estimate_casm_hash_computation_resources(
                         "Estimating hash cost is only supported for segmentation depth at most 1."
                     );
                 };
-                execution_resources += &poseidon_hash_many_cost(*length);
+                execution_resources += &poseidon_hash_many_cost(*length as usize);
                 execution_resources += &base_segment_cost;
             }
             execution_resources
@@ -347,7 +347,7 @@ impl TryFrom<CasmContractClass> for ContractClassV1 {
 
         let bytecode_segment_lengths = class
             .bytecode_segment_lengths
-            .unwrap_or_else(|| NestedIntList::Leaf(program.data_len()));
+            .unwrap_or_else(|| NestedIntList::Leaf(program.data_len() as u64));
 
         Ok(Self(Arc::new(ContractClassV1Inner {
             program,
